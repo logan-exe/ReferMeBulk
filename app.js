@@ -12,6 +12,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 app.use(express.json());
+cors = require("cors");
+app.use(cors());
 
 sgMail.setApiKey(process.env.SG_MAIL_API_KEY);
 
@@ -165,8 +167,9 @@ app.post("/addBulkContacts", async (req, res) => {
             user.isUploadingContacts = true;
             await user.save();
           } catch (err) {
+            console.log(err, "this is err");
             return res
-              .status(200)
+              .status(400)
               .json({ message: "Error in saving pending Contacts" });
           }
 
@@ -287,7 +290,7 @@ app.post("/addBulkContacts", async (req, res) => {
           };
 
           try {
-            await sgMail.send(msg);
+            // await sgMail.send(msg);
             console.log("Email sent");
           } catch (error) {
             console.error(error, "i am in the error of sending mail");
