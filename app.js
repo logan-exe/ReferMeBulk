@@ -91,7 +91,17 @@ app.post("/addBulkContacts", async (req, res) => {
             ) {
               FilteredData.push({
                 ...normalizedData,
-                phone: normalizedData.phone || "",
+                phone: normalizedData.phone
+                  ? normalizedData.phone.startsWith("0")
+                    ? "44" + normalizedData.phone.substring(1)
+                    : normalizedData.phone.startsWith("+44")
+                    ? normalizedData.phone.substring(1)
+                    : !normalizedData.phone.startsWith("0") &&
+                      !normalizedData.phone.startsWith("+44") &&
+                      !normalizedData.phone.startsWith(44)
+                    ? "44" + phoneNumber
+                    : normalizedData.phone
+                  : "",
                 referral_amount: normalizedData.referral_amount || 0,
               });
             } else {
@@ -290,7 +300,7 @@ app.post("/addBulkContacts", async (req, res) => {
           };
 
           try {
-            // await sgMail.send(msg);
+            await sgMail.send(msg);
             console.log("Email sent");
           } catch (error) {
             console.error(error, "i am in the error of sending mail");
