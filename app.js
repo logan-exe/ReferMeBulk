@@ -99,7 +99,7 @@ app.post("/addBulkContacts", async (req, res) => {
                     : !normalizedData.phone.startsWith("0") &&
                       !normalizedData.phone.startsWith("+44") &&
                       !normalizedData.phone.startsWith(44)
-                    ? "44" + phoneNumber
+                    ? "44" + normalizedData.phone
                     : normalizedData.phone
                   : "",
                 referral_amount: normalizedData.referral_amount || 0,
