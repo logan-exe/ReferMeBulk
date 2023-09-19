@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     default:
       "https://referme-user-images.s3.eu-west-2.amazonaws.com/Profile+Icon+(1).jpeg",
   },
-  isUploadingContacts: {
+  isUploadingContactsPending: {
     type: Boolean,
     default: false,
   },

@@ -24,13 +24,17 @@ app.get("/", async (req, res) => {
   res.send("Hello world!");
 });
 
+app.get("/test", async (req, res) => {
+  console.log("I am working");
+  return res.status(200).json({ message: "This endpoint working fine" });
+});
+
 app.post("/addBulkContacts", async (req, res) => {
   try {
     const { userId } = req.query;
-
     const issuer = await User.find({ _id: userId });
 
-    upload.single("file")(req, res, (error) => {
+    upload.single("file")(req, res, async (error) => {
       if (error) {
         console.error("Error uploading file:", error);
         return res.status(400).json({ message: "Error uploading file" });
@@ -41,7 +45,6 @@ app.post("/addBulkContacts", async (req, res) => {
       }
 
       const fileBuffer = req.file.buffer;
-
       const stream = streamifier.createReadStream(fileBuffer);
       const incorrectEmails = [];
       const FinalList = [];
@@ -52,6 +55,7 @@ app.post("/addBulkContacts", async (req, res) => {
       stream
         .pipe(csv())
         .on("headers", async (headers) => {
+          // ... (your existing header validation logic)
           const trimmedHeaders = headers.map((header) => header.trim());
           const expectedHeaders = [
             "firstname",
@@ -70,9 +74,36 @@ app.post("/addBulkContacts", async (req, res) => {
                 "Column names in csv must match column names in csv temaplate",
             });
           }
+
+          // send a response
+          // const user = await User.findById(userId);
+          try {
+            const updatedUser = await User.findByIdAndUpdate(
+              userId,
+              { isUploadingContactsPending: true },
+              { new: true }
+            );
+
+            if (!updatedUser) {
+              return res.status(404).send("User not found");
+            }
+
+            res.status(200).json({
+              message: "Contacts added successfully",
+              incorrectEmails: incorrectEmails,
+            });
+          } catch (error) {
+            res.status(400).send("failure");
+          }
+
+          if (missingHeaders.length > 0) {
+            return res.status(400).json({
+              message:
+                "Column names in csv must match column names in csv temaplate",
+            });
+          }
         })
         .on("data", async (data) => {
-          // Normalize the data object keys by trimming them
           const normalizedData = Object.fromEntries(
             Object.entries(data).map(([key, value]) => [key.trim(), value])
           );
@@ -161,60 +192,47 @@ app.post("/addBulkContacts", async (req, res) => {
           const results = await Promise.allSettled(promises);
 
           results.forEach((result) => {
-            if (result.status === "fulfilled" && result.value.value != null) {
-              incorrectEmails.push(result.value.value);
-            } else if (result.status === "rejected") {
-              console.error("Error:", result.reason);
+            if (result.status === "fulfilled" && result.value != null) {
+              incorrectEmails.push(result.value);
             }
           });
 
-          let pendingContacts = FinalList.length;
+          const BATCH_SIZE = 1000;
+          const totalContactsToUpload = FinalList.length;
+          const batches = Math.ceil(totalContactsToUpload / BATCH_SIZE);
           const user = await User.findById(userId);
-          try {
-            user.pendingContactsToUpload = pendingContacts;
+
+          user.totalContactsToUpload = totalContactsToUpload;
+          user.isUploadingContactsPending = true;
+          await user.save();
+
+          for (let i = 0; i < batches; i++) {
+            const batchStart = i * BATCH_SIZE;
+            const batchEnd = batchStart + BATCH_SIZE;
+            const currentBatch = FinalList.slice(batchStart, batchEnd);
+
+            const contactDocuments = currentBatch.map((row) => ({
+              _id: row._id,
+              firstname: row.firstname,
+              lastname: row.lastname,
+              email: row.email,
+              phone: row.phone || "",
+              referral_link: row.referral_link,
+              user: row.user,
+              referral_amount: row.referral_amount,
+              date: row.date,
+            }));
+
+            await Contact.insertMany(contactDocuments);
+
+            user.pendingContactsToUpload = totalContactsToUpload - batchEnd;
             user.totalContactsBeforeUpload = user.contacts.length;
-            user.totalContactsToUpload = pendingContacts;
-            user.isUploadingContacts = true;
             await user.save();
-          } catch (err) {
-            console.log(err, "this is err");
-            return res
-              .status(400)
-              .json({ message: "Error in saving pending Contacts" });
           }
 
-          res.status(200).json({
-            message: "Contacts added successfully",
-            incorrectEmails: incorrectEmails,
-          });
-
-          const contactDocuments = FinalList.map((row) => ({
-            _id: row._id,
-            firstname: row.firstname,
-            lastname: row.lastname,
-            email: row.email,
-            phone: row.phone || "",
-            referral_link: row.referral_link,
-            user: row.user,
-            referral_amount: row.referral_amount,
-            date: row.date,
-          }));
-
-          await Contact.insertMany(contactDocuments);
-
-          const contactIds = contactDocuments.map((row) => ({
-            contact_id: row._id,
-          }));
-
-          const userUpdate = {
-            $push: { contacts: { $each: contactIds } },
-            $set: {
-              isUploadingContacts: false,
-              pendingContactsToUpload: 0,
-            },
-          };
-
-          await User.updateOne({ _id: userId }, userUpdate);
+          user.isUploadingContactsPending = false;
+          user.pendingContactsToUpload = 0;
+          await user.save();
 
           const msg = {
             to: `${issuer[0].email}`, // Change to your recipient
@@ -286,7 +304,7 @@ app.post("/addBulkContacts", async (req, res) => {
                                           <p style="margin: 0 0 20px 0">
                                             Your contacts from the CSV list have successfully been added to your contacts list.
                                             Each contact now possesses a unique referral link that they can share with others, enabling them to provide you with referrals.
-                                              For an overview of your updated contacts, please proceed to the Contacts page.
+                                          For an overview of your updated contacts, please proceed to the Contacts page.
                                           </p>
                                         </td>
                                       </tr>
@@ -311,11 +329,6 @@ app.post("/addBulkContacts", async (req, res) => {
   } catch (e) {
     res.status(400).send("failure");
   }
-});
-
-app.get("/test", async (req, res) => {
-  console.log("I am working");
-  return res.status(200).json({ message: "This endpoint working fine" });
 });
 
 module.exports = app;
