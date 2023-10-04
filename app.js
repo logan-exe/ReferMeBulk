@@ -89,12 +89,10 @@ app.post("/addBulkContacts", async (req, res) => {
               return res.status(404).send("User not found");
             }
 
-            res.status(200).json({
-              message: "Contacts added successfully",
-              incorrectEmails: incorrectEmails,
-            });
+         
           } catch (error) {
-            res.status(400).send("failure");
+            console.log(error.message,"i am error")
+            // res.status(400).send("failure");
           }
 
           if (missingHeaders.length > 0) {
@@ -152,6 +150,11 @@ app.post("/addBulkContacts", async (req, res) => {
             if (count_doc > 5000) {
             return res.status(400).json({message : "You can only upload up to 5000 contacts at a time."})
           }
+
+           res.status(200).json({
+              message: "Contacts added successfully",
+              incorrectEmails: incorrectEmails,
+            });
 
           console.log("i am ahead of here")
 
