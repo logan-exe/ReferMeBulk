@@ -51,7 +51,7 @@ app.post("/addBulkContacts", async (req, res) => {
       const FilteredData = [];
       const currentDate = new Date();
       const processedEmails = new Set();
-           const count_doc = 0;
+          var count_doc = 0;
 
       stream
         .pipe(csv())
