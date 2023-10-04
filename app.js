@@ -147,10 +147,12 @@ app.post("/addBulkContacts", async (req, res) => {
           }
         })
         .on("end", async () => {
+           console.log(count_doc,"i am count_docs okk ")
 
             if (count_doc > 5000) {
             return res.status(400).json({message : "You can only upload up to 5000 contacts at a time."})
           }
+
           const promises = FilteredData.map(async (singleRow) => {
             try {
               const foundContact = await Contact.findOne({
