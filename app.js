@@ -51,6 +51,7 @@ app.post("/addBulkContacts", async (req, res) => {
       const FilteredData = [];
       const currentDate = new Date();
       const processedEmails = new Set();
+           const count_doc = 0;
 
       stream
         .pipe(csv())
@@ -107,6 +108,7 @@ app.post("/addBulkContacts", async (req, res) => {
           const normalizedData = Object.fromEntries(
             Object.entries(data).map(([key, value]) => [key.trim(), value])
           );
+          count_doc++;
 
           if (processedEmails.has(normalizedData.email)) {
             incorrectEmails.push(normalizedData);
@@ -145,6 +147,10 @@ app.post("/addBulkContacts", async (req, res) => {
           }
         })
         .on("end", async () => {
+
+            if (count_doc > 5000) {
+            return res.status(400).json({message : "You can only upload up to 5000 contacts at a time."})
+          }
           const promises = FilteredData.map(async (singleRow) => {
             try {
               const foundContact = await Contact.findOne({
