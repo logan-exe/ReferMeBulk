@@ -145,10 +145,18 @@ app.post("/addBulkContacts", async (req, res) => {
           }
         })
         .on("end", async () => {
-           console.log(count_doc,"i am count_docs okk ")
+          console.log(count_doc, "i am count_docs okk ")
 
-            if (count_doc > 5000) {
-            return res.status(400).json({message : "You can only upload up to 5000 contacts at a time."})
+          const totalContacts = await Contact.find({ user: userId });
+
+          if (totalContacts + count_doc > 500) {
+             return res.status(400).json({message : `You already have ${totalContacts.length} contacts . You can upload only ${500-totalContacts.length} currently. ` })
+          }
+          
+
+
+            if (count_doc > 500) {
+            return res.status(400).json({message : "You can only upload up to 500 contacts at a time."})
           }
 
            res.status(200).json({
