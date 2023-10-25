@@ -150,6 +150,10 @@ app.post("/addBulkContacts", async (req, res) => {
           const totalContacts = await Contact.find({ user: userId });
 
           if (totalContacts + count_doc > 500) {
+            const currUser = await User.findOne({ _id: userId });
+            currUser.isUploadingContactsPending = false;
+            currUser.save()
+
              return res.status(400).json({message : `You already have ${totalContacts.length} contacts . You can upload only ${500-totalContacts.length} currently. ` })
           }
           
