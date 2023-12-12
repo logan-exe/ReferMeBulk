@@ -51,7 +51,7 @@ app.post("/addBulkContacts", async (req, res) => {
       const FilteredData = [];
       const currentDate = new Date();
       const processedEmails = new Set();
-          var count_doc = 0;
+      var count_doc = 0;
 
       stream
         .pipe(csv())
@@ -88,10 +88,8 @@ app.post("/addBulkContacts", async (req, res) => {
             if (!updatedUser) {
               return res.status(404).send("User not found");
             }
-
-         
           } catch (error) {
-            console.log(error.message,"i am error")
+            console.log(error.message, "i am error");
             // res.status(400).send("failure");
           }
 
@@ -145,30 +143,38 @@ app.post("/addBulkContacts", async (req, res) => {
           }
         })
         .on("end", async () => {
-          console.log(count_doc, "i am count_docs okk ")
+          console.log(count_doc, "i am count_docs okk ");
 
           const totalContacts = await Contact.find({ user: userId });
 
-          if (totalContacts + count_doc > 500) {
+          if (totalContacts + count_doc > 20000) {
             const currUser = await User.findOne({ _id: userId });
             currUser.isUploadingContactsPending = false;
-            currUser.save()
+            currUser.save();
 
-             return res.status(400).json({message : `You already have ${totalContacts.length} contacts . You can upload only ${500-totalContacts.length} currently. ` })
-          }
-          
-
-
-            if (count_doc > 500) {
-            return res.status(400).json({message : "You can only upload up to 500 contacts at a time."})
-          }
-
-           res.status(200).json({
-              message: "Contacts added successfully",
-              incorrectEmails: incorrectEmails,
+            return res.status(400).json({
+              message: `You already have ${
+                totalContacts.length
+              } contacts . You can upload only ${
+                20000 - totalContacts.length
+              } currently. `,
             });
+          }
 
-          console.log("i am ahead of here")
+          if (count_doc > 20000) {
+            return res
+              .status(400)
+              .json({
+                message: "You can only upload up to 20000 contacts at a time.",
+              });
+          }
+
+          res.status(200).json({
+            message: "Contacts added successfully",
+            incorrectEmails: incorrectEmails,
+          });
+
+          console.log("i am ahead of here");
 
           const promises = FilteredData.map(async (singleRow) => {
             try {
