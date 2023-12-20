@@ -1,5 +1,4 @@
-import { Schema, model, models } from "mongoose";
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema({
   _id: {
