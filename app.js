@@ -162,11 +162,9 @@ app.post("/addBulkContacts", async (req, res) => {
           }
 
           if (count_doc > 20000) {
-            return res
-              .status(400)
-              .json({
-                message: "You can only upload up to 20000 contacts at a time.",
-              });
+            return res.status(400).json({
+              message: "You can only upload up to 20000 contacts at a time.",
+            });
           }
 
           res.status(200).json({
@@ -205,6 +203,12 @@ app.post("/addBulkContacts", async (req, res) => {
                   user: userId,
                   referral_amount: singleRow.referral_amount || 0,
                   date: currentDate.toString(),
+                  payment_type: issuer.default_payment_type
+                    ? issuer.default_payment_type
+                    : "after_sale",
+                  payment_method: issuer.default_payment_method
+                    ? issuer.default_payment_method
+                    : "amazon_gift",
                 });
 
                 return {
