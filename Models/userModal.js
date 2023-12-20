@@ -1,21 +1,33 @@
-const mongoose = require("mongoose");
+import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchema = mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
+
   firstname: {
     type: String,
     required: true,
+  },
+  isFirstTimeLogin: {
+    type: Boolean,
+    default: true,
   },
   lastname: {
     type: String,
     required: true,
   },
+  profileLinkClicks: {
+    type: Number,
+  },
   isActive: {
     type: Boolean,
     default: false,
+  },
+  profile_preview_image: {
+    type: String,
   },
   profile_image: {
     type: String,
@@ -26,13 +38,21 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  default_payment_method: {
+    type: String,
+    enum: ["bank_transfer", "amazon_gift"],
+  },
+  default_payment_type: {
+    type: String,
+    enum: ["after_sale", "after_referral"],
+  },
   totalContactsToUpload: {
     type: Number,
   },
-  totalContactsBeforeUpload: {
+  pendingContactsToUpload: {
     type: Number,
   },
-  pendingContactsToUpload: {
+  totalContactsBeforeUpload: {
     type: Number,
   },
   username: {
@@ -144,17 +164,13 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-  comments_made: [
-    {
-      comment_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
-      },
-    },
-  ],
   referrals_received: {
     type: Number,
     default: 0,
+  },
+  contact_limit: {
+    type: Number,
+    default: 5,
   },
   total_reviews: {
     type: Number,
@@ -202,14 +218,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  my_leads: [
-    {
-      lead_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Lead",
-      },
-    },
-  ],
   reviews: [
     {
       review_id: {
@@ -218,9 +226,100 @@ const userSchema = new mongoose.Schema({
       },
     },
   ],
-  disclaimer: {
+  images: [
+    {
+      date_added: Date,
+      image_uri: String,
+    },
+  ],
+  additional_information: {
     type: String,
+  },
+  fees: {
+    type: String,
+  },
+  trainings: {
+    type: String,
+  },
+  video_url: {
+    type: String,
+  },
+  preview_regenerate: {
+    type: Boolean,
+    default: true,
+  },
+  accreditation: {
+    type: String,
+    default: null,
+  },
+  isAffilateLinkGenerated: {
+    type: Boolean,
+    default: false,
+  },
+  AffilatedContactCount: {
+    type: Number,
+    default: 0,
+  },
+  post_count: {
+    type: Number,
+    default: 0,
+  },
+  email_count: {
+    type: Number,
+    default: 0,
+  },
+  whatsapp_count: {
+    type: Number,
+    default: 0,
+  },
+  payment_plan: {
+    type: String,
+    default: "free",
+  },
+  current_subscription_id: {
+    type: String,
+    default: null,
+  },
+  current_subscription_start_date: {
+    type: Date,
+  },
+  current_subscription_expiry_date: {
+    type: Date,
+  },
+  subscription_active: {
+    type: Boolean,
+    default: false,
+  },
+  gpt_counter: {
+    type: Number,
+    default: 10,
+  },
+  email_counter: {
+    type: Number,
+    default: 35,
+  },
+  promo_code: {
+    type: String,
+  },
+  whatsapp_counter: {
+    type: Number,
+    default: 0,
+  },
+  googleAvgRating: {
+    type: Number,
+    default: 0,
+  },
+  terms: {
+    type: String,
+    default: null,
+  },
+  referral_active: {
+    type: Boolean,
+    default: false,
+  },
+  referral_amount: {
+    type: Number,
   },
 });
 
-module.exports = mongoose.model("User", userSchema) || mongoose.models?.User;
+module.exports = mongoose.models?.User || mongoose.model("User", userSchema);

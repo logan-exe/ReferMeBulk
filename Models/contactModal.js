@@ -1,6 +1,8 @@
-const mongoose = require("mongoose");
+import { Schema, model, models } from "mongoose";
+import mongoose from "mongoose";
+const currentDate = new Date();
 
-const contactSchema = new mongoose.Schema({
+const contactSchema = mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
@@ -8,14 +10,17 @@ const contactSchema = new mongoose.Schema({
   firstname: {
     type: String,
     required: true,
+    index: true,
   },
   lastname: {
     type: String,
     required: true,
+    index: true,
   },
   email: {
     type: String,
     required: true,
+    index: true,
   },
   occupation: {
     type: String,
@@ -52,6 +57,7 @@ const contactSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    index: true,
   },
   review_requested: {
     type: Boolean,
@@ -77,6 +83,31 @@ const contactSchema = new mongoose.Schema({
   google_wallet_pass_created_date: {
     type: String,
   },
+  business: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Business",
+  },
+  payment_method: {
+    type: String,
+    enum: ["bank_transfer", "amazon_gift"],
+  },
+  payment_type: {
+    type: String,
+    enum: ["after_sale", "after_referral"],
+  },
+  payment_percentage_enabled: {
+    type: Boolean,
+  },
+  payment_shares: {
+    type: [
+      {
+        party_name: String, // Storing the name of the party
+        percentage: Number, // Storing the percentage share
+      },
+    ],
+    default: [], // Defaulting to an empty array
+  },
+
   apple_wallet_pass_created_date: {
     type: String,
   },
@@ -95,8 +126,26 @@ const contactSchema = new mongoose.Schema({
   account_details_submitted: {
     type: Boolean,
   },
+  account_creation_email_sent: {
+    type: Boolean,
+  },
   total_amount_generated: {
     type: Number,
+  },
+  otp: {
+    type: String,
+    default: null, // Default to null, it will be set when the OTP is generated
+  },
+  otp_expiring_time: {
+    type: Date,
+    default: null, // Default to null, it will be set along with the OTP
+  },
+  isAffilate: {
+    type: Boolean,
+    default: false,
+  },
+  referral_amount_informed: {
+    type: Boolean,
   },
   lead_generated: [
     {
@@ -108,6 +157,7 @@ const contactSchema = new mongoose.Schema({
   ],
 });
 
-  
-    
-module.exports = mongoose.model("Contact", contactSchema) || mongoose.models?.Contact;
+contactSchema.index({ user: 1, date: -1 });
+
+module.exports =
+  mongoose.models.Contact || mongoose.model("Contact", contactSchema);

@@ -5,7 +5,7 @@ import csv
 fake = Faker()
 
 contacts = []
-for _ in range(15000):
+for _ in range(10):
     firstname = fake.first_name()
     lastname = fake.last_name()
     email = fake.email()
@@ -13,7 +13,7 @@ for _ in range(15000):
     referral_amount = round(random.uniform(10.00, 1000.00), 2)
     contacts.append((firstname, lastname, email, phone, referral_amount))
 
-    csv_file_path = "test_contacts_100k.csv"
+    csv_file_path = "test_contacts_10.csv"
 
 # Write the data to a CSV file
 with open(csv_file_path, mode='w', newline='') as csv_file:
